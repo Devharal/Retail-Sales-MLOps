@@ -1,0 +1,232 @@
+# version: '3.8'
+
+# services:
+#   airflow-webserver:
+#     image: apache/airflow:2.5.0-python3.9
+#     environment:
+#       AIRFLOW__CORE__EXECUTOR: LocalExecutor
+#       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:${MAIN_DB_PW}@postgres:5432/postgres
+#       AIRFLOW__CORE__FERNET_KEY: ''
+#     ports:
+#       - "8080:8080"
+#     volumes:
+#       - ./services/airflow/dags:/opt/airflow/dags
+#     depends_on:
+#       - postgres
+#     command: webserver
+
+#   airflow-scheduler:
+#     image: apache/airflow:2.5.0-python3.9
+#     environment:
+#       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:${MAIN_DB_PW}@postgres:5432/postgres
+#       AIRFLOW__CORE__FERNET_KEY: ''
+#     volumes:
+#       - ./services/airflow/dags:/opt/airflow/dags
+#     depends_on:
+#       - airflow-webserver
+#     command: scheduler
+
+#   airflow-init:
+#     image: apache/airflow:2.5.0-python3.9
+#     restart: on-failure
+#     environment:
+#       - _AIRFLOW_WWW_USER_CREATE=True
+#       - _AIRFLOW_WWW_USER_USERNAME=airflow
+#       - _AIRFLOW_WWW_USER_PASSWORD=airflow
+#       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:${MAIN_DB_PW}@postgres:5432/postgres
+#       - AIRFLOW__CORE__FERNET_KEY=
+#     volumes:
+#       - ./services/airflow/dags:/opt/airflow/dags
+#     depends_on:
+#       - postgres
+#     command: >
+#       bash -c "airflow db init && airflow db upgrade && airflow users create 
+#       --username airflow 
+#       --password airflow 
+#       --firstname Dev 
+#       --lastname Haral 
+#       --role Admin 
+#       --email dev@example.com"
+
+#   postgres:
+#     image: postgres:13
+#     environment:
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: ${MAIN_DB_PW}
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - pgdata:/var/lib/postgresql/data
+
+# volumes:
+#   pgdata:
+
+
+# version: '3.8'
+
+# services:
+#   postgres:
+#     image: postgres:13
+#     environment:
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: ${MAIN_DB_PW}
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - pgdata:/var/lib/postgresql/data
+
+#   airflow-webserver:
+#     image: apache/airflow:2.5.0-python3.9
+#     environment:
+#       AIRFLOW__CORE__EXECUTOR: LocalExecutor
+#       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:${MAIN_DB_PW}@postgres:5432/postgres
+#       AIRFLOW__CORE__FERNET_KEY: ''
+#     ports:
+#       - "8080:8080"
+#     volumes:
+#       - ./services/airflow/dags:/opt/airflow/dags
+#       - ./services/airflow/requirements.txt:/requirements.txt
+#     depends_on:
+#       - postgres
+#     command: >
+#       bash -c "pip install -r /requirements.txt && airflow webserver"
+
+#   airflow-scheduler:
+#     image: apache/airflow:2.5.0-python3.9
+#     environment:
+#       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:${MAIN_DB_PW}@postgres:5432/postgres
+#       AIRFLOW__CORE__FERNET_KEY: ''
+#     volumes:
+#       - ./services/airflow/dags:/opt/airflow/dags
+#       - ./services/airflow/requirements.txt:/requirements.txt
+#     depends_on:
+#       - airflow-webserver
+#     command: >
+#       bash -c "pip install -r /requirements.txt && airflow scheduler"
+
+#   airflow-init:
+#     image: apache/airflow:2.5.0-python3.9
+#     restart: on-failure
+#     environment:
+#       - _AIRFLOW_WWW_USER_CREATE=True
+#       - _AIRFLOW_WWW_USER_USERNAME=airflow
+#       - _AIRFLOW_WWW_USER_PASSWORD=airflow
+#       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:${MAIN_DB_PW}@postgres:5432/postgres
+#       - AIRFLOW__CORE__FERNET_KEY=
+#     volumes:
+#       - ./services/airflow/dags:/opt/airflow/dags
+#       - ./services/airflow/requirements.txt:/requirements.txt
+#     depends_on:
+#       - postgres
+#     command: >
+#       bash -c "pip install -r /requirements.txt &&
+#                airflow db init &&
+#                airflow db upgrade &&
+#                airflow users create --username airflow --password airflow --firstname Dev --lastname Haral --role Admin --email dev@example.com"
+
+# volumes:
+#   pgdata:
+
+
+# version: '3.8'
+
+# x-airflow-common: &airflow-common
+#   build: ./services/airflow
+#   environment:
+#     - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+#     - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:${MAIN_DB_PW}@postgres:5432/postgres
+#     - AIRFLOW__CORE__FERNET_KEY=FB0o_zt4e3Ziq4wwjZFS3RvxDYxZ2DjnLBvpj0muxhs=
+#     - AIRFLOW__CORE__LOAD_EXAMPLES=False
+#     - AIRFLOW__WEBSERVER__SECRET_KEY=secret_key_here
+#   volumes:
+#     - ./services/airflow/dags:/opt/airflow/dags
+#     - ./services/airflow/logs:/opt/airflow/logs
+#     - ./services/airflow/plugins:/opt/airflow/plugins
+#   depends_on:
+#     - postgres
+
+# services:
+#   airflow-webserver:
+#     <<: *airflow-common
+#     command: webserver
+#     ports:
+#       - "${AIRFLOW_WEBSERVER_PORT}:8080"
+#     healthcheck:
+#       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 5
+
+#   airflow-scheduler:
+#     <<: *airflow-common
+#     command: scheduler
+#     healthcheck:
+#       test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 5
+
+#   airflow-init:
+#     <<: *airflow-common
+#     command: version
+#     environment:
+#       - AIRFLOW__CORE__LOAD_EXAMPLES=False
+#       - AIRFLOW_UID=${AIRFLOW_UID}
+
+
+version: '3.8'
+
+x-airflow-common: &airflow-common
+  build: ./services/airflow
+  environment:
+    - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+    - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:${MAIN_DB_PW}@postgres:5432/postgres
+    - AIRFLOW__CORE__FERNET_KEY=FB0o_zt4e3Ziq4wwjZFS3RvxDYxZ2DjnLBvpj0muxhs=
+    - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    - AIRFLOW__WEBSERVER__SECRET_KEY=secret_key_here
+    - _AIRFLOW_WWW_USER_CREATE=True
+    - _AIRFLOW_WWW_USER_USERNAME=airflow
+    - _AIRFLOW_WWW_USER_PASSWORD=airflow
+  volumes:
+    - ./services/airflow/dags:/opt/airflow/dags
+    - ./services/airflow/logs:/opt/airflow/logs
+    - ./services/airflow/plugins:/opt/airflow/plugins
+    - ./services/airflow/requirements.txt:/requirements.txt
+  depends_on:
+    - postgres
+
+services:
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: bash -c "pip install -r /requirements.txt && airflow webserver"
+    ports:
+      - "${AIRFLOW_WEBSERVER_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: bash -c "pip install -r /requirements.txt && airflow scheduler"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  airflow-init:
+    <<: *airflow-common
+    command: >
+      bash -c "pip install -r /requirements.txt &&
+               airflow db init &&
+               airflow db upgrade &&
+               airflow users create --username airflow --password airflow --firstname Dev --lastname Haral --role Admin --email dev@example.com"
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW_UID=${AIRFLOW_UID:-50000}
+
+volumes:
+  pgdata:

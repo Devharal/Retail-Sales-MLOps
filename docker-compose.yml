@@ -1,0 +1,371 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  kafka-ui:
+        platform: linux/arm64
+        container_name: kafka-ui
+        image: provectuslabs/kafka-ui:latest
+        ports:
+            - ${KAFKA_UI_PORT}:8080
+        depends_on:
+            - kafka
+        environment:
+            KAFKA_CLUSTERS_0_NAME: local
+            KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: PLAINTEXT://kafka:9092
+            DYNAMIC_CONFIG_ENABLED: 'true'
+
+  # web-ui:
+  #       platform: linux/arm64
+  #       container_name: web-ui
+  #       image: ariya23156/sfmlops-web-ui:latest
+  #       build:
+  #           context: ./services/web-ui
+  #           dockerfile: Dockerfile
+  #           args:
+  #               WEB_UI_PORT: ${WEB_UI_PORT}
+  #       environment:
+  #           - TRAINING_SERVICE_SERVER=nginx
+  #           - TRAINING_SERVICE_URL_PREFIX=api/trainers/ # trailing / is important
+  #           - FORECAST_ENDPOINT_URL=http://nginx/api/forecasters/forecast
+  #           - DB_CONNECTION_URL=postgresql://postgres:SuperSecurePwdHere@postgres:${POSTGRES_PORT}/postgres
+  #       volumes:
+  #           - ./services/web-ui/app/:/service/app/
+  web-ui:
+    build: ./services/web-ui
+    ports:
+      - "8000:8000"
+    depends_on:
+      - forecast-service
+      - training-service
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8085:80"
+    volumes:
+      - ./services/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - web-ui
+      - forecast-service
+      - training-service
+        
+
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${MAIN_DB_PW:-postgres}
+
+    volumes:
+        - ./services/postgres/docker_postgres_init.sql:/docker-entrypoint-initdb.d/docker_postgres_init.sql
+        - pgdata:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5052:80"
+    depends_on:
+      - postgres
+    
+
+  data-producer:
+    build:
+      context: ./services/data-producer
+    container_name: data-producer
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_TOPIC: sale_rossman_store
+      KAFKA_BOOTSTRAP_SERVER: kafka:9092
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${MAIN_DB_PW}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_DB: postgres
+      POSTGRES_HOST: postgres
+
+  data-consumer:
+    build:
+      context: ./services/data-consumer
+    container_name: data-consumer
+    depends_on:
+      - kafka
+      - postgres
+    environment:
+      - KAFKA_TOPIC=sale_rossman_store
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - MAIN_DB_PW=${MAIN_DB_PW}
+    restart: always
+
+  prometheus:
+    image: prom/prometheus:v2.42.0
+    ports:
+      - "${PROMETHEUS_PORT}:9090"
+    volumes:
+      - ./services/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yaml'
+      - '--storage.tsdb.path=/prometheus'
+    depends_on:
+      - cadvisor
+      - node-exporter
+
+  grafana:
+    image: grafana/grafana:9.5.2
+    ports:
+      - "${GRAFANA_PORT}:3000"
+    volumes:
+      - ./services/grafana/dashboards:/etc/grafana/dashboards
+      - ./services/grafana/grafana_datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin
+    depends_on:
+      - prometheus
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    ports:
+      - "${CADVISOR_PORT}:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+
+  node-exporter:
+    image: prom/node-exporter:v1.5.0
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+
+  # nginx:
+  #       platform: linux/arm64
+  #       container_name: nginx
+  #       # restart: always
+  #       build:
+  #           context: ./services/nginx
+  #           dockerfile: Dockerfile
+  #       ports:
+  #           - ${NGINX_PORT}:${NGINX_PORT}
+  #       environment:
+  #         - WEB_UI_PORT=${WEB_UI_PORT}
+  #         - TRAINING_SERVICE_PORT=${TRAINING_SERVICE_PORT}
+  #         - FORECAST_SERVICE_PORT=${FORECAST_SERVICE_PORT}
+  #         - NGINX_PORT=${NGINX_PORT}
+  #       depends_on:
+  #           - forecast-service
+  #           - web-ui
+  #           - training-service
+  
+
+  # mlflow:
+  #   build:
+  #     context: ./services/mlflow
+  #   ports:
+  #     - "${MLFLOW_PORT}:${MLFLOW_PORT}"
+  #   environment:
+  #     - MLFLOW_PORT=${MLFLOW_PORT}
+  #     - POSTGRES_USER=postgres
+  #     - MAIN_DB_PW=${MAIN_DB_PW}
+  #     - POSTGRES_PORT=${POSTGRES_PORT}
+  #     - MLFLOW_ARTIFACT_ROOT=${MLFLOW_ARTIFACT_ROOT}
+  #   depends_on:
+  #     - postgres
+  # mlflow:
+  #   build:
+  #     context: ./services/mlflow
+  #   ports:
+  #     - "${MLFLOW_PORT}:${MLFLOW_PORT}"
+  #   environment:
+  #     - MLFLOW_PORT=${MLFLOW_PORT}
+  #     - POSTGRES_USER=postgres
+  #     - MAIN_DB_PW=${MAIN_DB_PW}
+  #     - POSTGRES_PORT=${POSTGRES_PORT}
+  #     - MLFLOW_ARTIFACT_ROOT=/storage/artifacts
+  #   volumes:
+  #     - mlflow-artifacts:/storage
+  #   depends_on:
+  #     - postgres
+  mlflow:
+    build:
+      context: ./services/mlflow
+    ports:
+      - "${MLFLOW_PORT}:${MLFLOW_PORT}"
+    environment:
+      - MLFLOW_PORT=${MLFLOW_PORT}
+      - MLFLOW_ARTIFACT_ROOT=/storage/artifacts
+    volumes:
+      - mlflow-artifacts:/storage
+
+
+  # training-service:
+  #     build:
+  #       context: ./services/training-service
+  #     ports:
+  #       - "${TRAINING_SERVICE_PORT}:${TRAINING_SERVICE_PORT}"
+  #     environment:
+  #       - MLFLOW_PORT=${MLFLOW_PORT}
+  #       - POSTGRES_PORT=${POSTGRES_PORT}
+  #       - MAIN_DB_PW=${MAIN_DB_PW}
+  #     depends_on:
+  #       - mlflow
+  #       - postgres
+  training-service:
+    build:
+      context: ./services/training-service
+    ports:
+      - "${TRAINING_SERVICE_PORT}:${TRAINING_SERVICE_PORT}"
+    environment:
+      - MLFLOW_PORT=${MLFLOW_PORT}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - MAIN_DB_PW=${MAIN_DB_PW}
+      - MLFLOW_ARTIFACT_ROOT=/storage/artifacts
+    volumes:
+      - mlflow-artifacts:/storage
+    depends_on:
+      - mlflow
+      - postgres
+
+
+
+  # forecast-service:
+  #   build:
+  #     context: ./services/forecast-service
+  #   ports:
+  #     - "${FORECAST_SERVICE_PORT}:${FORECAST_SERVICE_PORT}"
+  #   environment:
+  #     - MLFLOW_PORT=${MLFLOW_PORT}
+  #     - FORECAST_SERVICE_PORT=${FORECAST_SERVICE_PORT}
+  #     - POSTGRES_PORT=${POSTGRES_PORT}
+  #     - MAIN_DB_PW=${MAIN_DB_PW}
+  #   depends_on:
+  #     - mlflow
+  #     - postgres
+  forecast-service:
+    build:
+      context: ./services/forecast-service
+    ports:
+      - "${FORECAST_SERVICE_PORT}:${FORECAST_SERVICE_PORT}"
+    environment:
+      - MLFLOW_PORT=${MLFLOW_PORT}
+      - FORECAST_SERVICE_PORT=${FORECAST_SERVICE_PORT}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - MAIN_DB_PW=${MAIN_DB_PW}
+    volumes:
+      - mlflow-artifacts:/storage
+    depends_on:
+      - mlflow
+      - postgres
+
+  # airflow-postgres:
+  #   image: postgres:13
+  #   container_name: airflow-postgres
+  #   environment:
+  #     POSTGRES_USER: airflow
+  #     POSTGRES_PASSWORD: airflow
+  #     POSTGRES_DB: airflow
+  #   volumes:
+  #     - airflow_postgres_data:/var/lib/postgresql/data
+
+  airflow-webserver:
+    image: retail-sales-airflow:2.7.2
+    build:
+      context: ./services/airflow
+      dockerfile: Dockerfile
+    container_name: airflow-webserver
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:SuperSecurePwdHere@postgres:5432/postgres
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    volumes:
+      - ./services/airflow/dags:/opt/airflow/dags
+      - ./services/airflow/logs:/opt/airflow/logs
+      - ./services/airflow/plugins:/opt/airflow/plugins
+    ports:
+      - "8080:8080"
+    command: webserver
+
+  airflow-scheduler:
+    image: retail-sales-airflow:2.7.2
+    build:
+      context: ./services/airflow
+      dockerfile: Dockerfile
+    container_name: airflow-scheduler
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:SuperSecurePwdHere@postgres:5432/postgres
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    volumes:
+      - ./services/airflow/dags:/opt/airflow/dags
+      - ./services/airflow/logs:/opt/airflow/logs
+      - ./services/airflow/plugins:/opt/airflow/plugins
+    command: scheduler
+
+  airflow-init:
+    image: retail-sales-airflow:2.7.2
+    build:
+      context: ./services/airflow
+      dockerfile: Dockerfile
+    container_name: airflow-init
+    depends_on:
+      - postgres
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:SuperSecurePwdHere@postgres:5432/postgres
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    command: >
+      bash -c "airflow db migrate &&
+               airflow users create --username airflow --password airflow --firstname Admin --lastname Admin --role Admin --email admin@example.com"
+
+
+
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  pgdata:
+  mlflow-data:
+  mlflow-artifacts:
+  prometheus_data:

@@ -1,0 +1,29 @@
+groups:
+  - name: model_alerts
+    rules:
+      - alert: HighPredictionLatency
+        expr: prediction_latency_seconds_bucket{le="2.0"} < 0.95
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High prediction latency detected
+          description: More than 5% of predictions are taking longer than 2 seconds
+
+      - alert: ModelAccuracyDrop
+        expr: model_accuracy < 0.7
+        for: 1h
+        labels:
+          severity: critical
+        annotations:
+          summary: Model accuracy below threshold
+          description: Model accuracy has dropped below 70%
+
+      - alert: HighErrorRate
+        expr: rate(prediction_error_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High prediction error rate
+          description: Error rate is above 10% in the last 5 minutes
