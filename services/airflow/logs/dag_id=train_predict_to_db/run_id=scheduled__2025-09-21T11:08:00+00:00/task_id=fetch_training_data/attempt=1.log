@@ -1,0 +1,29 @@
+[2025-09-21T11:09:02.057+0000] {logging_mixin.py:151} INFO - Changing /opt/airflow/logs/dag_id=train_predict_to_db/run_id=scheduled__2025-09-21T11:08:00+00:00/task_id=fetch_training_data permission to 509
+[2025-09-21T11:09:02.058+0000] {logging_mixin.py:151} INFO - Failed to change /opt/airflow/logs/dag_id=train_predict_to_db/run_id=scheduled__2025-09-21T11:08:00+00:00/task_id=fetch_training_data permission to 509: [Errno 1] Operation not permitted: '/opt/airflow/logs/dag_id=train_predict_to_db/run_id=scheduled__2025-09-21T11:08:00+00:00/task_id=fetch_training_data'
+[2025-09-21T11:09:02.118+0000] {logging_mixin.py:151} INFO - Changing /opt/airflow/logs/dag_id=train_predict_to_db/run_id=scheduled__2025-09-21T11:08:00+00:00/task_id=fetch_training_data permission to 509
+[2025-09-21T11:09:02.120+0000] {logging_mixin.py:151} INFO - Failed to change /opt/airflow/logs/dag_id=train_predict_to_db/run_id=scheduled__2025-09-21T11:08:00+00:00/task_id=fetch_training_data permission to 509: [Errno 1] Operation not permitted: '/opt/airflow/logs/dag_id=train_predict_to_db/run_id=scheduled__2025-09-21T11:08:00+00:00/task_id=fetch_training_data'
+[2025-09-21T11:09:02.182+0000] {taskinstance.py:1159} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: train_predict_to_db.fetch_training_data scheduled__2025-09-21T11:08:00+00:00 [queued]>
+[2025-09-21T11:09:02.199+0000] {taskinstance.py:1159} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: train_predict_to_db.fetch_training_data scheduled__2025-09-21T11:08:00+00:00 [queued]>
+[2025-09-21T11:09:02.200+0000] {taskinstance.py:1361} INFO - Starting attempt 1 of 2
+[2025-09-21T11:09:02.227+0000] {taskinstance.py:1382} INFO - Executing <Task(PythonOperator): fetch_training_data> on 2025-09-21 11:08:00+00:00
+[2025-09-21T11:09:02.242+0000] {standard_task_runner.py:57} INFO - Started process 323 to run task
+[2025-09-21T11:09:02.256+0000] {standard_task_runner.py:84} INFO - Running: ['airflow', 'tasks', 'run', 'train_predict_to_db', 'fetch_training_data', 'scheduled__2025-09-21T11:08:00+00:00', '--job-id', '12', '--raw', '--subdir', 'DAGS_FOLDER/train_predict_to_db_dag.py', '--cfg-path', '/tmp/tmpfu8vxi3u']
+[2025-09-21T11:09:02.267+0000] {standard_task_runner.py:85} INFO - Job 12: Subtask fetch_training_data
+[2025-09-21T11:09:02.441+0000] {logging_mixin.py:151} INFO - Changing /opt/airflow/logs/dag_id=train_predict_to_db/run_id=scheduled__2025-09-21T11:08:00+00:00/task_id=fetch_training_data permission to 509
+[2025-09-21T11:09:02.442+0000] {logging_mixin.py:151} INFO - Failed to change /opt/airflow/logs/dag_id=train_predict_to_db/run_id=scheduled__2025-09-21T11:08:00+00:00/task_id=fetch_training_data permission to 509: [Errno 1] Operation not permitted: '/opt/airflow/logs/dag_id=train_predict_to_db/run_id=scheduled__2025-09-21T11:08:00+00:00/task_id=fetch_training_data'
+[2025-09-21T11:09:02.446+0000] {task_command.py:416} INFO - Running <TaskInstance: train_predict_to_db.fetch_training_data scheduled__2025-09-21T11:08:00+00:00 [running]> on host 36da5371e73d
+[2025-09-21T11:09:02.625+0000] {taskinstance.py:1662} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='airflow' AIRFLOW_CTX_DAG_ID='train_predict_to_db' AIRFLOW_CTX_TASK_ID='fetch_training_data' AIRFLOW_CTX_EXECUTION_DATE='2025-09-21T11:08:00+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='scheduled__2025-09-21T11:08:00+00:00'
+[2025-09-21T11:09:02.647+0000] {db_utils.py:17} INFO - Connected to PostgreSQL
+[2025-09-21T11:09:04.546+0000] {train_predict_to_db_dag.py:29} INFO - Fetched training data tail:
+            id  store  ...  productname                 created_at
+100496  155936    484  ...    product_A 2025-09-21 11:08:19.647283
+100497  155937    483  ...    product_A 2025-09-21 11:08:30.625444
+100498  155938    482  ...    product_A 2025-09-21 11:08:40.682248
+100499  155939    481  ...    product_A 2025-09-21 11:08:50.670848
+100500  155940    480  ...    product_A 2025-09-21 11:09:01.056229
+
+[5 rows x 12 columns]
+[2025-09-21T11:09:04.641+0000] {python.py:194} INFO - Done. Returned value was: {'store': 370, 'start_date': '2025-06-23', 'end_date': '2025-09-21'}
+[2025-09-21T11:09:04.711+0000] {taskinstance.py:1400} INFO - Marking task as SUCCESS. dag_id=train_predict_to_db, task_id=fetch_training_data, execution_date=20250921T110800, start_date=20250921T110902, end_date=20250921T110904
+[2025-09-21T11:09:04.841+0000] {local_task_job_runner.py:228} INFO - Task exited with return code 0
+[2025-09-21T11:09:04.896+0000] {taskinstance.py:2778} INFO - 1 downstream tasks scheduled from follow-on schedule check

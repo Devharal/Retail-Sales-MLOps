@@ -1,0 +1,60 @@
+[2025-09-21T12:21:08.819+0000] {logging_mixin.py:151} INFO - Changing /opt/airflow/logs/dag_id=train_predict_to_db/run_id=scheduled__2025-09-21T12:20:00+00:00/task_id=trigger_model_training permission to 509
+[2025-09-21T12:21:08.819+0000] {logging_mixin.py:151} INFO - Failed to change /opt/airflow/logs/dag_id=train_predict_to_db/run_id=scheduled__2025-09-21T12:20:00+00:00/task_id=trigger_model_training permission to 509: [Errno 1] Operation not permitted: '/opt/airflow/logs/dag_id=train_predict_to_db/run_id=scheduled__2025-09-21T12:20:00+00:00/task_id=trigger_model_training'
+[2025-09-21T12:21:08.855+0000] {logging_mixin.py:151} INFO - Changing /opt/airflow/logs/dag_id=train_predict_to_db/run_id=scheduled__2025-09-21T12:20:00+00:00/task_id=trigger_model_training permission to 509
+[2025-09-21T12:21:08.856+0000] {logging_mixin.py:151} INFO - Failed to change /opt/airflow/logs/dag_id=train_predict_to_db/run_id=scheduled__2025-09-21T12:20:00+00:00/task_id=trigger_model_training permission to 509: [Errno 1] Operation not permitted: '/opt/airflow/logs/dag_id=train_predict_to_db/run_id=scheduled__2025-09-21T12:20:00+00:00/task_id=trigger_model_training'
+[2025-09-21T12:21:08.895+0000] {taskinstance.py:1159} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: train_predict_to_db.trigger_model_training scheduled__2025-09-21T12:20:00+00:00 [queued]>
+[2025-09-21T12:21:08.907+0000] {taskinstance.py:1159} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: train_predict_to_db.trigger_model_training scheduled__2025-09-21T12:20:00+00:00 [queued]>
+[2025-09-21T12:21:08.908+0000] {taskinstance.py:1361} INFO - Starting attempt 1 of 2
+[2025-09-21T12:21:08.927+0000] {taskinstance.py:1382} INFO - Executing <Task(PythonOperator): trigger_model_training> on 2025-09-21 12:20:00+00:00
+[2025-09-21T12:21:08.938+0000] {standard_task_runner.py:57} INFO - Started process 315 to run task
+[2025-09-21T12:21:08.942+0000] {standard_task_runner.py:84} INFO - Running: ['airflow', 'tasks', 'run', 'train_predict_to_db', 'trigger_model_training', 'scheduled__2025-09-21T12:20:00+00:00', '--job-id', '212', '--raw', '--subdir', 'DAGS_FOLDER/train_predict_to_db_dag.py', '--cfg-path', '/tmp/tmphf7yasix']
+[2025-09-21T12:21:08.946+0000] {standard_task_runner.py:85} INFO - Job 212: Subtask trigger_model_training
+[2025-09-21T12:21:09.014+0000] {logging_mixin.py:151} INFO - Changing /opt/airflow/logs/dag_id=train_predict_to_db/run_id=scheduled__2025-09-21T12:20:00+00:00/task_id=trigger_model_training permission to 509
+[2025-09-21T12:21:09.015+0000] {logging_mixin.py:151} INFO - Failed to change /opt/airflow/logs/dag_id=train_predict_to_db/run_id=scheduled__2025-09-21T12:20:00+00:00/task_id=trigger_model_training permission to 509: [Errno 1] Operation not permitted: '/opt/airflow/logs/dag_id=train_predict_to_db/run_id=scheduled__2025-09-21T12:20:00+00:00/task_id=trigger_model_training'
+[2025-09-21T12:21:09.017+0000] {task_command.py:416} INFO - Running <TaskInstance: train_predict_to_db.trigger_model_training scheduled__2025-09-21T12:20:00+00:00 [running]> on host 1bfed80107dd
+[2025-09-21T12:21:09.124+0000] {taskinstance.py:1662} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='airflow' AIRFLOW_CTX_DAG_ID='train_predict_to_db' AIRFLOW_CTX_TASK_ID='trigger_model_training' AIRFLOW_CTX_EXECUTION_DATE='2025-09-21T12:20:00+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='scheduled__2025-09-21T12:20:00+00:00'
+[2025-09-21T12:21:10.454+0000] {local_task_job_runner.py:115} ERROR - Received SIGTERM. Terminating subprocesses
+[2025-09-21T12:21:10.558+0000] {process_utils.py:131} INFO - Sending 15 to group 315. PIDs of all processes in the group: [315]
+[2025-09-21T12:21:10.562+0000] {process_utils.py:86} INFO - Sending the signal 15 to group 315
+[2025-09-21T12:21:10.578+0000] {taskinstance.py:1632} ERROR - Received SIGTERM. Terminating subprocesses.
+[2025-09-21T12:21:10.623+0000] {taskinstance.py:1937} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/operators/python.py", line 192, in execute
+    return_value = self.execute_callable()
+  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/operators/python.py", line 209, in execute_callable
+    return self.python_callable(*self.op_args, **self.op_kwargs)
+  File "/opt/airflow/dags/train_predict_to_db_dag.py", line 42, in trigger_model_training
+    response = requests.post(
+  File "/home/airflow/.local/lib/python3.9/site-packages/requests/api.py", line 115, in post
+    return request("post", url, data=data, json=json, **kwargs)
+  File "/home/airflow/.local/lib/python3.9/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+  File "/home/airflow/.local/lib/python3.9/site-packages/requests/sessions.py", line 587, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/home/airflow/.local/lib/python3.9/site-packages/requests/sessions.py", line 701, in send
+    r = adapter.send(request, **kwargs)
+  File "/home/airflow/.local/lib/python3.9/site-packages/requests/adapters.py", line 489, in send
+    resp = conn.urlopen(
+  File "/home/airflow/.local/lib/python3.9/site-packages/urllib3/connectionpool.py", line 714, in urlopen
+    httplib_response = self._make_request(
+  File "/home/airflow/.local/lib/python3.9/site-packages/urllib3/connectionpool.py", line 466, in _make_request
+    six.raise_from(e, None)
+  File "<string>", line 3, in raise_from
+  File "/home/airflow/.local/lib/python3.9/site-packages/urllib3/connectionpool.py", line 461, in _make_request
+    httplib_response = conn.getresponse()
+  File "/usr/local/lib/python3.9/http/client.py", line 1377, in getresponse
+    response.begin()
+  File "/usr/local/lib/python3.9/http/client.py", line 320, in begin
+    version, status, reason = self._read_status()
+  File "/usr/local/lib/python3.9/http/client.py", line 281, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+  File "/usr/local/lib/python3.9/socket.py", line 704, in readinto
+    return self._sock.recv_into(b)
+  File "/home/airflow/.local/lib/python3.9/site-packages/airflow/models/taskinstance.py", line 1634, in signal_handler
+    raise AirflowException("Task received SIGTERM signal")
+airflow.exceptions.AirflowException: Task received SIGTERM signal
+[2025-09-21T12:21:10.770+0000] {taskinstance.py:1400} INFO - Marking task as UP_FOR_RETRY. dag_id=train_predict_to_db, task_id=trigger_model_training, execution_date=20250921T122000, start_date=20250921T122108, end_date=20250921T122110
+[2025-09-21T12:21:17.189+0000] {standard_task_runner.py:104} ERROR - Failed to execute job 212 for task trigger_model_training (Task received SIGTERM signal; 315)
+[2025-09-21T12:21:17.243+0000] {process_utils.py:79} INFO - Process psutil.Process(pid=315, status='terminated', exitcode=1, started='12:21:08') (315) terminated with exit code 1
+[2025-09-21T12:21:17.246+0000] {local_task_job_runner.py:228} INFO - Task exited with return code 143
+[2025-09-21T12:21:17.363+0000] {taskinstance.py:2778} INFO - 0 downstream tasks scheduled from follow-on schedule check
