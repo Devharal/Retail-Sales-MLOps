@@ -1,5 +1,5 @@
 # Retail Sales MLOps Project
-![Core Infrastructure](arch.svg)
+![Core Infrastructure](images/architech.png)
 ## About the Project
 
 This is a production-grade MLOps project that builds an end-to-end machine learning pipeline for retail sales prediction. The project demonstrates real-world MLOps practices including:
@@ -87,6 +87,7 @@ Follow this exact sequence to start all services properly:
 ### Step 1: Start Core Infrastructure
 ```bash
 docker-compose up -d zookeeper kafka postgres
+
 ```
 
 **Expected Result**: 
@@ -94,25 +95,13 @@ docker-compose up -d zookeeper kafka postgres
 - PostgreSQL available at `localhost:5432`
 - Wait 30-60 seconds for services to fully initialize
 
-**Verification Commands:**
-```bash
-# Check service status
-docker-compose ps
 
-# Check Kafka topics
-docker-compose exec kafka kafka-topics --bootstrap-server localhost:9092 --list
-
-# Test PostgreSQL connection
-docker-compose exec postgres pg_isready -U postgres
-```
-
-![Core Infrastructure](images/step1-core-infrastructure.png)
-*Screenshot showing Docker containers running and Kafka topics*
 
 ---
 
 ### Step 2: Start Data Pipeline
 ```bash
+docker-compose up -d kafka-ui
 docker-compose up -d data-producer
 ```
 
@@ -120,16 +109,8 @@ docker-compose up -d data-producer
 - Data producer starts streaming sales data to Kafka
 - Check logs: `docker-compose logs data-producer`
 
-**Verification Commands:**
-```bash
-# Monitor data producer logs
-docker-compose logs -f data-producer
 
-# Check Kafka messages
-docker-compose exec kafka kafka-console-consumer --bootstrap-server localhost:9092 --topic sale_rossman_store --from-beginning --max-messages 5
-```
-
-![Data Producer](images/step2-data-producer.png)
+![Data Producer](images/kakfaui.png)
 *Screenshot showing data producer logs streaming sales data*
 
 ---
@@ -153,7 +134,8 @@ docker-compose up -d pgadmin
    - Username: `postgres`
    - Password: `SuperSecurePwdHere`
 
-![PgAdmin Setup](images/step3-pgadmin-setup.png)
+![PgAdmin Setup](images/pgadmin_1.png)
+![PgAdmin Setup](images/pgadmin_2.png)
 *Screenshot showing PgAdmin login and server configuration*
 
 ---
@@ -166,21 +148,6 @@ docker-compose up -d data-consumer
 **Expected Result**:
 - Consumer processes Kafka messages and stores in PostgreSQL
 - Check data in PgAdmin: `SELECT * FROM rossman_sales LIMIT 10;`
-
-**Verification Commands:**
-```bash
-# Check consumer logs
-docker-compose logs -f data-consumer
-
-# Verify data in database
-docker-compose exec postgres psql -U postgres -c "SELECT COUNT(*) FROM rossman_sales;"
-```
-
-![Data Consumer](images/step4-data-consumer.png)
-*Screenshot showing data consumer logs and database records*
-
-![Database Data](images/step4-database-data.png)
-*Screenshot of PgAdmin showing rossman_sales table data*
 
 ---
 
@@ -198,8 +165,7 @@ docker-compose up -d mlflow
 2. You should see MLflow tracking UI
 3. Initially no experiments will be visible
 
-![MLflow UI](images/step5-mlflow-ui.png)
-*Screenshot showing MLflow UI interface*
+
 
 ---
 
@@ -217,8 +183,8 @@ docker-compose up -d training-service
 2. You should see FastAPI Swagger documentation
 3. Test the `/health` endpoint
 
-![Training Service API](images/step6-training-api.png)
-*Screenshot showing Training Service Swagger documentation*
+![MLflow UI](images/mlflow1.png)
+*Screenshot showing MLflow UI interface*
 
 ---
 
@@ -238,11 +204,8 @@ docker-compose up -d airflow-webserver airflow-scheduler airflow-init
 3. You should see the DAGs listed
 4. Enable the DAGs by toggling them on
 
-![Airflow UI](images/step7-airflow-ui.png)
+![Airflow UI](images/airflow1.png)
 *Screenshot showing Airflow web interface with DAGs*
-
-![Airflow DAGs](images/step7-airflow-dags.png)
-*Screenshot showing enabled DAGs in Airflow*
 
 ---
 
@@ -260,9 +223,6 @@ docker-compose up -d forecast-service
 2. Test the `/health` endpoint
 3. Try the `/model/info` endpoint
 
-![Forecast Service API](images/step8-forecast-api.png)
-*Screenshot showing Forecast Service Swagger documentation*
-
 ---
 
 ### Step 9: Start Monitoring Stack
@@ -277,27 +237,19 @@ docker-compose up -d prometheus grafana cadvisor node-exporter
 
 **Setup Instructions:**
 
-**Prometheus (`http://localhost:9090`):**
-1. Navigate to Status > Targets
-2. Verify all services are being scraped
-
-![Prometheus Targets](images/step9-prometheus-targets.png)
-*Screenshot showing Prometheus targets status*
-
 **Grafana (`http://localhost:3000`):**
 1. Login with admin/admin
 2. Import dashboards from Configuration > Dashboards
 3. Configure data sources (Prometheus should be auto-configured)
 
-![Grafana Dashboard](images/step9-grafana-dashboard.png)
+![Grafana Dashboard](images/grafan1.png)
+![Grafana Dashboard](images/grafan2.png)
 *Screenshot showing Grafana monitoring dashboards*
 
 **cAdvisor (`http://localhost:8089`):**
 1. Navigate to view container metrics
 2. Check resource utilization
 
-![cAdvisor](images/step9-cadvisor.png)
-*Screenshot showing cAdvisor container metrics*
 
 ---
 
@@ -320,11 +272,9 @@ docker-compose up -d nginx web-ui
 2. You should see the business dashboard
 3. Try making a prediction through the UI
 
-![Web UI Dashboard](images/step10-web-ui.png)
+![Web UI Dashboard](images/webui1.png)
 *Screenshot showing the main web dashboard*
 
-![Prediction Interface](images/step10-prediction-interface.png)
-*Screenshot showing the prediction form and results*
 
 ## Service Access URLs
 
@@ -350,18 +300,6 @@ Once all services are running, you can access:
 docker-compose exec postgres psql -U postgres -c "SELECT COUNT(*) FROM rossman_sales;"
 ```
 
-**Expected Output:**
-```
- count 
--------
-   240
-(1 row)
-```
-
-![Database Count](images/test1-database-count.png)
-*Screenshot showing data count in PostgreSQL*
-
----
 
 ### 2. Train a Model
 ```bash
@@ -450,12 +388,6 @@ Visit Grafana at `localhost:3000` to view:
 ![Grafana Metrics](images/test5-grafana-metrics.png)
 *Screenshot showing Grafana dashboard with system metrics*
 
-**Monitor API Performance:**
-Check Prometheus targets at `localhost:9090/targets` to ensure all services are being scraped:
-
-![Prometheus Metrics](images/test5-prometheus-metrics.png)
-*Screenshot showing Prometheus metrics collection*
-
 ---
 
 ### 6. Test Airflow Workflows
@@ -463,9 +395,6 @@ Check Prometheus targets at `localhost:9090/targets` to ensure all services are 
 2. Enable the `train_predict_to_db` DAG
 3. Trigger a manual run
 4. Monitor the execution
-
-![Airflow Execution](images/test6-airflow-execution.png)
-*Screenshot showing successful Airflow DAG execution*
 
 ---
 
@@ -486,33 +415,7 @@ curl -X POST "http://localhost:8080/api/v1/dags/train_predict_to_db/dagRuns" \
 3. Test prediction with the new model
 4. Check monitoring dashboards for metrics updates
 
-![End-to-End Test](images/test7-end-to-end.png)
-*Screenshot showing successful end-to-end pipeline execution*
 
-## Troubleshooting
-
-### Common Issues
-
-**Services not starting**: Check Docker logs
-```bash
-docker-compose logs <service-name>
-```
-
-**Database connection issues**: Ensure PostgreSQL is fully started
-```bash
-docker-compose exec postgres pg_isready -U postgres
-```
-
-**Kafka connection issues**: Verify Kafka is running
-```bash
-docker-compose exec kafka kafka-topics --bootstrap-server localhost:9092 --list
-```
-
-**Memory issues**: Ensure at least 8GB RAM available
-```bash
-docker system df
-docker system prune
-```
 
 ### Stopping Services
 
@@ -528,77 +431,6 @@ To stop without removing volumes:
 docker-compose down
 ```
 
-## Development
-
-### Local Development Setup
-```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r services/forecast-service/requirements.txt
-```
-
-### Running Tests
-```bash
-# Run integration tests
-pytest services/tests/integration/
-
-# Run load tests
-locust -f services/tests/load/locustfile.py --host=http://localhost:4242
-```
-
-## Image Placeholders
-
-The following screenshots should be added to demonstrate each step of the implementation:
-
-### Core Infrastructure & Setup
-- `images/step1-core-infrastructure.png` - Docker containers running status and Kafka topics
-- `images/step2-data-producer.png` - Data producer logs showing streaming sales data
-- `images/step3-pgadmin-setup.png` - PgAdmin login screen and server configuration dialog
-
-### Data Pipeline
-- `images/step4-data-consumer.png` - Consumer logs processing messages
-- `images/step4-database-data.png` - PgAdmin showing rossman_sales table with sample data
-
-### ML Services
-- `images/step5-mlflow-ui.png` - MLflow tracking UI homepage
-- `images/step6-training-api.png` - Training Service Swagger documentation interface
-- `images/test2-mlflow-experiment.png` - MLflow experiment showing model metrics and parameters
-
-### Orchestration
-- `images/step7-airflow-ui.png` - Airflow login and main interface
-- `images/step7-airflow-dags.png` - DAGs list with toggle switches enabled
-- `images/test6-airflow-execution.png` - DAG run details showing successful execution
-
-### API Services
-- `images/step8-forecast-api.png` - Forecast Service Swagger documentation
-- `images/test4-swagger-testing.png` - Swagger UI showing prediction endpoint test
-
-### Monitoring & Observability  
-- `images/step9-prometheus-targets.png` - Prometheus targets page showing all services UP
-- `images/step9-grafana-dashboard.png` - Grafana dashboard with system metrics charts
-- `images/step9-cadvisor.png` - cAdvisor interface showing container resource usage
-- `images/test5-grafana-metrics.png` - Detailed Grafana dashboard with API metrics
-- `images/test5-prometheus-metrics.png` - Prometheus metrics explorer
-
-### Web Interface
-- `images/step10-web-ui.png` - Main business dashboard homepage
-- `images/step10-prediction-interface.png` - Prediction form and results display
-
-### Testing & Validation
-- `images/test1-database-count.png` - PostgreSQL query result showing data count
-- `images/test3-prediction-results.png` - PgAdmin showing forecast_results table
-- `images/test7-end-to-end.png` - Complete pipeline execution status
-
-### Troubleshooting Examples
-- `images/troubleshoot-logs.png` - Example of checking service logs
-- `images/troubleshoot-containers.png` - Docker compose ps output showing service health
-
-### Architecture Overview
-- `images/architecture-diagram.png` - Complete system architecture diagram
-- `images/data-flow.png` - Data flow diagram from Kafka to predictions
 
 ## Next Steps
 
@@ -606,11 +438,3 @@ The following screenshots should be added to demonstrate each step of the implem
 - Set up CI/CD pipelines  
 - Configure production monitoring and alerting
 - Scale services based on load requirements
-
-## Support
-
-For issues and questions:
-1. Check service logs: `docker-compose logs <service-name>`
-2. Verify all services are healthy: `docker-compose ps`
-3. Review the troubleshooting section above
-4. Consult the full 8-week implementation guide
